@@ -11,6 +11,8 @@ from pupil_apriltags import Detector
 DISTANCE_AREA = 1
 TOP_BUFFER = 0.2
 
+last_seen_tag = None
+
 def polygon_area(x, y):
     """
     Calculate the area of a polygon using the shoelace formula.
@@ -119,11 +121,15 @@ def draw_tags(
     cap_width=960,
     cap_height=540,
 ):
+    global last_seen_tag
+
     for tag in tags:
         tag_family = tag.tag_family
         tag_id = tag.tag_id
         center = tag.center
         corners = tag.corners
+
+        last_seen_tag = tag_id
 
         center = (int(center[0]), int(center[1]))
         corner_01 = (int(corners[0][0]), int(corners[0][1]))
@@ -141,12 +147,6 @@ def draw_tags(
                 (corner_04[0], corner_04[1]), (0, 255, 0), 2)
         cv.line(image, (corner_04[0], corner_04[1]),
                 (corner_01[0], corner_01[1]), (0, 255, 0), 2)
-
-        # Draw lines between projected 3D points
-        for i in range(len(image_points)):
-            p1 = tuple(map(int, image_points[i - 1].ravel()))
-            p2 = tuple(map(int, image_points[i].ravel()))
-            cv.line(image, p1, p2, (255, 0, 0), 2)
                 
         cv.putText(image, str(tag_id), (center[0] - 10, center[1] - 10),
                    cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2, cv.LINE_AA)
@@ -182,7 +182,8 @@ def draw_tags(
         cv.putText(image, choice, (int(center[0]), cap_height - 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3, cv.LINE_AA)
         # cv.putText(image, arrow_down, (int(center[0]), cap_height - 10), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
         # cv.putText(image, arrow_left, (10, int(center[1])), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
-        
+    
+    cv.putText(image, "Last seen tag: " + str(last_seen_tag), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
 
     """ cv.putText(image,
                "Elapsed Time:" + '{:.1f}'.format(elapsed_time * 1000) + "ms",
