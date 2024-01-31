@@ -1,6 +1,7 @@
 from ultralytics import YOLO
 from tags import get_tags, draw_tags
 from faces import detect
+from util import track_frame, clear_track_history
 import cv2
 
 print("Loading Models")
@@ -47,6 +48,12 @@ while True:
         cv2.imshow("Face Detection", detect(frame))
     elif current_mode == "seg":
         results = seg_model.predict(source=frame, show=True)
+    elif current_mode == "track":
+        print("Tracking Mode")
+        # Run inference
+        results = track_frame(frame, obj_model)
+        # Display the resulting frame
+        cv2.imshow("Tracking", results)
     else:
         print(f"Invalid Mode: {current_mode}")
         break
@@ -82,6 +89,12 @@ while True:
         print("Changing Mode")
         current_mode = "seg"
         print(f"Mode: {current_mode}")
+        cv2.destroyAllWindows()
+    elif key == ord("6"):
+        print("Changing Mode")
+        current_mode = "track"
+        print(f"Mode: {current_mode}")
+        clear_track_history()
         cv2.destroyAllWindows()
     
     
