@@ -11,6 +11,8 @@ print("Models Loaded")
 
 print("Starting Camera")
 cap = cv2.VideoCapture(1)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
 print("Camera Started")
 
 # Set mode
