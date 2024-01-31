@@ -6,12 +6,19 @@ import argparse
 import numpy as np
 
 import cv2 as cv
-from pupil_apriltags import Detector
+from pyapriltags import Detector
 
 DISTANCE_AREA = 1
 TOP_BUFFER = 0.2
 
 last_seen_tag = None
+
+tags_dict = {
+    "6": "Middle of Tunnel",
+    "7": "Exit of Tunnel",
+    "5": "Start of Tunnel",
+    "None": "No Tag Found"
+}
 
 def polygon_area(x, y):
     """
@@ -31,7 +38,7 @@ def polygon_area(x, y):
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--device", type=int, default=0)
+    parser.add_argument("--device", type=int, default=1)
     parser.add_argument("--width", help='cap width', type=int, default=960)
     parser.add_argument("--height", help='cap height', type=int, default=540)
     parser.add_argument("--families", type=str, default='tag36h11')
@@ -45,6 +52,32 @@ def get_args():
     args = parser.parse_args()
 
     return args
+
+def get_tags(image):
+    # Detector
+    at_detector = Detector(
+        families="tag36h11",
+        nthreads=1,
+        quad_decimate=2.0,
+        quad_sigma=0.0,
+        refine_edges=1,
+        decode_sharpening=0.25,
+        debug=0,
+    )
+
+    tag_size = 0.1  # replace with the true physical size of the AprilTag in meters
+
+    elapsed_time = 0
+
+    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    tags = at_detector.detect(
+        image,
+        estimate_tag_pose=False,
+        camera_params=None,
+        tag_size=tag_size,
+    )
+
+    return tags
 
 def main():
     args = get_args()
@@ -117,7 +150,7 @@ def main():
 def draw_tags(
     image,
     tags,
-    elapsed_time,
+    elapsed_time=0,
     cap_width=960,
     cap_height=540,
 ):
@@ -184,6 +217,7 @@ def draw_tags(
         # cv.putText(image, arrow_left, (10, int(center[1])), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
     
     cv.putText(image, "Last seen tag: " + str(last_seen_tag), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
+    cv.putText(image, "Last Location: " + tags_dict[str(last_seen_tag)], (10, 90), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv.LINE_AA)
 
     """ cv.putText(image,
                "Elapsed Time:" + '{:.1f}'.format(elapsed_time * 1000) + "ms",
